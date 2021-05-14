@@ -69,6 +69,16 @@ var (
 		},
 	)
 
+	RHMIPreflightStatus = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "rhmi_preflight_status",
+			Help: "Preflight status of an RHMI installation",
+		},
+		[]string{
+			"status",
+		},
+	)
+
 	RHOAMVersion = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "rhoam_version",
@@ -88,6 +98,16 @@ var (
 		},
 		[]string{
 			"stage",
+		},
+	)
+
+	RHOAMPreflightStatus = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "rhoam_preflight_status",
+			Help: "Preflight status of an RHOAM installation",
+		},
+		[]string{
+			"status",
 		},
 	)
 
@@ -149,6 +169,25 @@ func SetRhmiVersions(stage string, version string, toVersion string, firstInstal
 	RHOAMVersion.Reset()
 	RHOAMVersion.WithLabelValues(stage, version, toVersion).Set(float64(firstInstallTimestamp))
 }
+
+func SetPreflightStatus(status integreatlyv1alpha1.PreflightStatus) {
+	RHOAMPreflightStatus.Reset()
+	RHMIPreflightStatus.Reset()
+
+	// -1 -> Fail
+	//  0 -> In Progress
+	//  1 -> Success
+	preflightNumberStatus := 0
+	if status == integreatlyv1alpha1.PreflightFail {
+		preflightNumberStatus -= 1
+	} else if status == integreatlyv1alpha1.PreflightSuccess {
+		preflightNumberStatus += 1
+	}
+
+	RHOAMPreflightStatus.WithLabelValues(string(status)).Set(float64(preflightNumberStatus))
+	RHMIPreflightStatus.WithLabelValues(string(status)).Set(float64(preflightNumberStatus))
+}
+
 
 func SetThreeScaleUserAction(httpStatus int, username, action string) {
 	ThreeScaleUserAction.WithLabelValues(username, action).Set(float64(httpStatus))

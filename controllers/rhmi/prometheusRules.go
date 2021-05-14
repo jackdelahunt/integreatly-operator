@@ -89,6 +89,25 @@ func (r *RHMIReconciler) newAlertsReconciler(installation *integreatlyv1alpha1.R
 					},
 				},
 			},
+			{
+				AlertName: fmt.Sprintf("%s-preflight-alerts", installationName),
+				Namespace: monitoring.OpenshiftMonitoringNamespace,
+				GroupName: fmt.Sprintf("%s-preflight.rules", installationName),
+				Rules: []monitoringv1.Rule{
+					{
+						Alert: fmt.Sprintf("%sPreflightChecksFailed", strings.ToUpper(installationName)),
+						Annotations: map[string]string{
+							"sop_url": resources.SopUrlUpgradeExpectedDurationExceeded,
+							"message": fmt.Sprintf("%s preflight checks for the installation failed",
+								strings.ToUpper(installationName)),
+						},
+						Expr:   intstr.FromString(fmt.Sprintf(`rate(rhoam_preflight_status{status = "successful"}[1m]) == 0`)),
+						For:    "5m",
+						Labels: map[string]string{"severity": "critical", "product": installationName,
+							"addon": getAddonName(installation), "namespace": "openshift-monitoring"},
+					},
+				},
+			},
 		},
 	}
 }

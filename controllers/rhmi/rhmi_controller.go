@@ -288,6 +288,8 @@ func (r *RHMIReconciler) Reconcile(request ctrl.Request) (ctrl.Result, error) {
 		})
 	}
 	metrics.SetRHMIStatus(installation)
+	metrics.SetPreflightStatus(installation.Status.PreflightStatus)
+
 
 	configManager, err := config.NewManager(context.TODO(), r.Client, request.NamespacedName.Namespace, installationCfgMap, installation)
 	if err != nil {
@@ -661,6 +663,7 @@ func (r *RHMIReconciler) preflightChecks(installation *rhmiv1alpha1.RHMI, instal
 		installation.Status.PreflightMessage = "Spec.useClusterStorage must be set to either 'true' or 'false' to continue"
 		_ = r.Status().Update(context.TODO(), installation)
 		log.Warning("preflight checks failed on useClusterStorage value")
+		metrics.SetPreflightStatus(installation.Status.PreflightStatus)
 		return result, nil
 	}
 
