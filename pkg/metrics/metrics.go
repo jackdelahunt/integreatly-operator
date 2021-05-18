@@ -188,7 +188,6 @@ func SetPreflightStatus(status integreatlyv1alpha1.PreflightStatus) {
 	RHMIPreflightStatus.WithLabelValues(string(status)).Set(float64(preflightNumberStatus))
 }
 
-
 func SetThreeScaleUserAction(httpStatus int, username, action string) {
 	ThreeScaleUserAction.WithLabelValues(username, action).Set(float64(httpStatus))
 }

@@ -290,7 +290,6 @@ func (r *RHMIReconciler) Reconcile(request ctrl.Request) (ctrl.Result, error) {
 	metrics.SetRHMIStatus(installation)
 	metrics.SetPreflightStatus(installation.Status.PreflightStatus)
 
-
 	configManager, err := config.NewManager(context.TODO(), r.Client, request.NamespacedName.Namespace, installationCfgMap, installation)
 	if err != nil {
 		return ctrl.Result{}, err
