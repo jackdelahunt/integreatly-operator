@@ -290,6 +290,18 @@ func (r *RHMIReconciler) Reconcile(request ctrl.Request) (ctrl.Result, error) {
 	metrics.SetRHMIStatus(installation)
 	metrics.SetPreflightStatus(installation.Status.PreflightStatus)
 
+	alertsClient, err := k8sclient.New(r.mgr.GetConfig(), k8sclient.Options{
+		Scheme: r.mgr.GetScheme(),
+	})
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("error creating client for alerts: %v", err)
+	}
+	// reconciles rhmi installation alerts
+	_, err = r.newAlertsReconciler(installation).ReconcileAlerts(context.TODO(), alertsClient)
+	if err != nil {
+		log.Error("Error reconciling alerts for the rhmi installation", err)
+	}
+
 	configManager, err := config.NewManager(context.TODO(), r.Client, request.NamespacedName.Namespace, installationCfgMap, installation)
 	if err != nil {
 		return ctrl.Result{}, err
@@ -351,18 +363,6 @@ func (r *RHMIReconciler) Reconcile(request ctrl.Request) (ctrl.Result, error) {
 		metrics.SetRhmiVersions(string(installation.Status.Stage), installation.Status.Version, installation.Status.ToVersion, installation.CreationTimestamp.Unix())
 
 		metrics.SetQuota(string(installation.Status.Stage), installation.Status.Quota, installation.Status.ToQuota)
-	}
-
-	alertsClient, err := k8sclient.New(r.mgr.GetConfig(), k8sclient.Options{
-		Scheme: r.mgr.GetScheme(),
-	})
-	if err != nil {
-		return ctrl.Result{}, fmt.Errorf("error creating client for alerts: %v", err)
-	}
-	// reconciles rhmi installation alerts
-	_, err = r.newAlertsReconciler(installation).ReconcileAlerts(context.TODO(), alertsClient)
-	if err != nil {
-		log.Error("Error reconciling alerts for the rhmi installation", err)
 	}
 
 	for _, stage := range installType.GetInstallStages() {
